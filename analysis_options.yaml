@@ -77,7 +77,8 @@ linter:
     prefer_mixin: true
     prefer_null_aware_method_calls: true
     prefer_single_quotes: true
-    require_trailing_commas: true
+    # require_trailing_commas intentionally omitted: it conflicts with the modern
+    # `dart format`, which manages trailing commas itself.
     sort_child_properties_last: true
     sort_constructors_first: true
     sort_unnamed_constructors_first: true

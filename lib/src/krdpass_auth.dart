@@ -76,11 +76,6 @@ class KrdpassAuth {
     _platform!.setResultHandler(_completeWithResult);
   }
 
-  /// Clears the JWKS cache.
-  Future<void> clearJwksCache() async {
-    // Native SDK handles its own caching
-  }
-
   /// Generate a random state string for CSRF protection.
   ///
   /// This is an independent cryptographically-secure random token — NOT a PKCE
@@ -228,7 +223,7 @@ class KrdpassAuth {
 
     KrdpassLogger.info('Starting signIn');
     if (_isAuthenticating || _pendingCompleter != null) {
-      throw StateError('Another authentication flow is in progress');
+      throw const KrdpassBusyException();
     }
 
     _isAuthenticating = true;
@@ -251,11 +246,13 @@ class KrdpassAuth {
       );
     } on TimeoutException {
       await _platform!.cancelPendingSignIn(timeout: true);
-      throw Exception('Sign in timed out');
+      throw const KrdpassTimeoutException();
+    } on KrdpassException {
+      await _platform!.cancelPendingSignIn();
+      rethrow;
     } catch (e) {
       await _platform!.cancelPendingSignIn();
-      if (e is KrdpassTokenResult) rethrow; // Unlikely but safe
-      throw Exception('Sign in failed: $e');
+      throw KrdpassAuthenticationException('Sign in failed', cause: e);
     } finally {
       _isAuthenticating = false;
     }
@@ -335,7 +332,7 @@ class KrdpassAuth {
             : {},
       );
     } catch (e) {
-      throw Exception('Failed to get user info: $e');
+      throw KrdpassNetworkException('Failed to get user info', cause: e);
     }
   }
 
@@ -366,7 +363,7 @@ class KrdpassAuth {
         scope: resultMap['scope'] as String?,
       );
     } catch (e) {
-      throw Exception('Failed to refresh tokens: $e');
+      throw KrdpassNetworkException('Failed to refresh tokens', cause: e);
     }
   }
 
@@ -388,7 +385,7 @@ class KrdpassAuth {
         tokenTypeHint: tokenTypeHint,
       );
     } catch (e) {
-      throw Exception('Failed to revoke token: $e');
+      throw KrdpassNetworkException('Failed to revoke token', cause: e);
     }
   }
 
@@ -407,7 +404,8 @@ class KrdpassAuth {
     }
     final parts = token.split('.');
     if (parts.length < 2) {
-      throw const FormatException('JWT must have at least a header and payload');
+      throw const FormatException(
+          'JWT must have at least a header and payload');
     }
 
     var base64 = parts[1];
@@ -501,6 +499,55 @@ class KrdpassAuth {
     _expectedState = null;
     _isAuthenticating = false;
   }
+}
+
+/// Base type for all errors thrown by the KRDPass SDK's authentication flows.
+///
+/// Catch [KrdpassException] to handle any SDK error, or switch on the concrete
+/// subtypes ([KrdpassCancelledException], [KrdpassTimeoutException],
+/// [KrdpassBusyException], [KrdpassNetworkException],
+/// [KrdpassAuthenticationException]) for specific handling. The user-facing
+/// [message] never embeds raw platform/server text; any underlying error is kept
+/// in [cause] for diagnostics.
+sealed class KrdpassException implements Exception {
+  const KrdpassException(this.message, {this.cause});
+
+  /// A stable, user-safe description of the failure.
+  final String message;
+
+  /// The underlying error, if any (for logging/diagnostics — may contain detail).
+  final Object? cause;
+
+  @override
+  String toString() => cause == null
+      ? 'KrdpassException: $message'
+      : 'KrdpassException: $message ($cause)';
+}
+
+/// The user cancelled the authentication flow.
+class KrdpassCancelledException extends KrdpassException {
+  const KrdpassCancelledException() : super('Authentication was cancelled');
+}
+
+/// The authentication flow timed out.
+class KrdpassTimeoutException extends KrdpassException {
+  const KrdpassTimeoutException() : super('Authentication timed out');
+}
+
+/// Another authentication flow is already in progress.
+class KrdpassBusyException extends KrdpassException {
+  const KrdpassBusyException()
+      : super('Another authentication flow is already in progress');
+}
+
+/// A network or CAS communication error (PAR, token exchange, userinfo, refresh, revoke).
+class KrdpassNetworkException extends KrdpassException {
+  const KrdpassNetworkException(super.message, {super.cause});
+}
+
+/// Authentication failed (bad code, token exchange rejected, id_token invalid, etc.).
+class KrdpassAuthenticationException extends KrdpassException {
+  const KrdpassAuthenticationException(super.message, {super.cause});
 }
 
 /// Exception thrown when token verification fails.

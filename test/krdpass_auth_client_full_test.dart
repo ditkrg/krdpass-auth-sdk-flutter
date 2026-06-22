@@ -41,7 +41,8 @@ void main() {
       client = KrdpassAuth.instance;
       await client.initialize(config: config);
 
-      final authFuture = client.authenticate(requestUri: 'test_request_uri', state: 'state_abc');
+      final authFuture = client.authenticate(
+          requestUri: 'test_request_uri', state: 'state_abc');
 
       // Simulate success callback from native side
       await Future.delayed(Duration.zero); // wait for channel invoke
@@ -79,7 +80,8 @@ void main() {
       client = KrdpassAuth.instance;
       await client.initialize(config: config);
 
-      final authFuture = client.authenticate(requestUri: 'test_request_uri', state: 'state_abc');
+      final authFuture = client.authenticate(
+          requestUri: 'test_request_uri', state: 'state_abc');
 
       // Simulate error callback from native side
       final binaryMessenger =
@@ -115,7 +117,8 @@ void main() {
 
       client = KrdpassAuth.instance;
       await client.initialize(config: config);
-      final result = await client.authenticate(requestUri: 'uri', state: 'state_abc');
+      final result =
+          await client.authenticate(requestUri: 'uri', state: 'state_abc');
 
       expect(result.isSuccess, isFalse);
       expect(result.error, 'launch_failed');
@@ -220,7 +223,8 @@ void main() {
     await client.initialize(config: config);
 
     // Start auth but don't finish
-    final authFuture = client.authenticate(requestUri: 'uri', state: 'state_abc');
+    final authFuture =
+        client.authenticate(requestUri: 'uri', state: 'state_abc');
 
     // Dispose should cancel pending auth
     client.dispose();
