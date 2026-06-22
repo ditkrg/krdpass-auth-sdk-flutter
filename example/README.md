@@ -13,7 +13,7 @@ Reference Flutter app for **Sign in with KRDPASS**.
 - Flutter stable SDK
 - KRDPASS app on test device/emulator
 - HTTPS domain/tunnel for callback URL
-- Running backend (recommended: `examples/server`)
+- A running backend that performs PAR + token exchange (see the integration guide linked below)
 
 ## Required Onboarding Inputs
 
@@ -42,18 +42,12 @@ CAS_TOKEN_URL=https://auth.dev.krd/connect/token
 CAS_PAR_URL=https://auth.dev.krd/connect/par
 ```
 
-3. Start backend (optional but recommended):
-
-```bash
-cd ../../../examples/server
-npm install
-npm start
-```
+3. Stand up a backend that implements PAR + token exchange (see the integration guide
+   in Related Docs). Point `BACKEND_URL` at it.
 
 4. Run the Flutter example:
 
 ```bash
-cd ../../packages/krdpass_auth_flutter/example
 flutter pub get
 flutter run
 ```
@@ -66,6 +60,5 @@ flutter run
 
 ## Related Docs
 
-- SDK README: `../README.md`
-- Integration guide: `../../../docs/INTEGRATION.md`
-- Server reference: `../../../examples/server/README.md`
+- SDK README: [`../README.md`](../README.md)
+- Integration guide: <https://docs.digital.gov.krd/software-development/04-interoperability/11-krdpass-sign-in-with-krdpass.html>

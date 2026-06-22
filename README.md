@@ -1,70 +1,95 @@
 # KRDPASS Auth SDK (Flutter)
 
-Official Flutter plugin for **Sign in with KRDPASS**.
+Official Flutter plugin for **Sign in with KRDPASS** — app-to-app SSO with the KRDPASS
+identity app (not a browser/WebView flow).
 
 ## Requirements
 
-- Flutter stable SDK
-- Android/iOS platform setup for KRDPASS callback behavior
+- Flutter stable SDK (Dart 3+)
+- Android `minSdk` 24+, iOS 15+
+- A registered KRDPASS client (`clientId`, approved scopes, HTTPS `redirectUri`)
 
-## Install from This Repository (v1)
+## Install
 
-1. Clone the SDK repo:
-
-```bash
-git clone https://github.com/ditkrg/krdpass-auth-sdk.git
-```
-
-2. Add local path dependency in your app `pubspec.yaml`:
-
-```yaml
-dependencies:
-  krdpass_auth_flutter:
-    path: ../krdpass-auth-sdk/packages/krdpass_auth_flutter
-```
-
-3. Install dependencies:
-
-```bash
-flutter pub get
-```
-
-## Optional Git Dependency
+Add the SDK as a git dependency on the release tag (no pub.dev publish):
 
 ```yaml
 dependencies:
   krdpass_auth_flutter:
     git:
-      url: https://github.com/ditkrg/krdpass-auth-sdk.git
-      path: packages/krdpass_auth_flutter
-      ref: main
+      url: https://github.com/ditkrg/krdpass-auth-sdk-flutter.git
+      ref: v1.0.0
 ```
+
+Then `flutter pub get`. Access to the private repo (SSH key or token) is required.
+
+## Quickstart
+
+Initialize once at startup:
+
+```dart
+import 'package:krdpass_auth_flutter/krdpass_auth_flutter.dart';
+
+final auth = KrdpassAuth.instance;
+await auth.initialize(
+  config: const KrdpassConfig(
+    clientId: 'your-client-id',
+    redirectUri: 'https://auth.your-app.example.com/callback',
+    environment: KrdpassEnvironment.production,
+  ),
+);
+```
+
+**Client-only flow** (`signIn`) — the SDK runs PKCE, PAR, and token exchange directly
+with KRDPASS and returns tokens. No backend required:
+
+```dart
+final tokens = await auth.signIn(scopes: ['openid', 'profile']);
+final userInfo = await auth.getUserInfo(accessToken: tokens.accessToken);
+```
+
+**Backend-mediated flow** (`authenticate`) — your server performs PAR and the token
+exchange; the SDK only launches KRDPASS and returns the authorization code:
+
+```dart
+final state = auth.generateState();
+// requestUri comes from your backend's PAR endpoint.
+final result = await auth.authenticate(requestUri: requestUri, state: state);
+// Send result.code + state to your backend to exchange for tokens.
+```
+
+Verify an ID token (signature via JWKS, issuer, audience, expiry):
+
+```dart
+final claims = await auth.verifyToken(token: tokens.idToken!);
+```
+
+> Helpers that do **not** verify a token are intentionally named
+> `decodeTokenUnverified` — never use their output for trust decisions.
 
 ## Integration Notes
 
-- iOS callback completion uses Universal Links (`https://`).
-- Android callback completion uses Activity/Intent result.
-- Recommended production flow is server-mediated OAuth.
+- iOS callback completion uses Universal Links (`https://`); the KRDPASS app must be installed.
+- Android callback completion uses the Activity/Intent result from the explicit KRDPASS launch.
+- Recommended production flow is the server-mediated `authenticate` path.
 
 ## Required Onboarding Inputs
 
 - `clientId`
 - Approved scopes
 - HTTPS `redirectUri`
-- Android package/signing fingerprint and iOS associated domain metadata
+- Android package/signing fingerprint and iOS associated-domain metadata
 
 ## Example App
 
-- Path: `packages/krdpass_auth_flutter/example`
-- Setup guide: `packages/krdpass_auth_flutter/example/README.md`
+A runnable demo of both flows lives in [`example/`](example/) — see
+[`example/README.md`](example/README.md) for setup.
 
 ## Security Notes
 
 - Keep `client_secret` and private keys server-side.
 - Never commit secrets, keystores, or `.env` files.
 
-## Related Docs
+## Backend & Protocol Reference
 
-- Root guide: `../../README.md`
-- Integration architecture: `../../docs/INTEGRATION.md`
-- Server reference: `../../examples/server/README.md`
+- Integration guide: <https://docs.digital.gov.krd/software-development/04-interoperability/11-krdpass-sign-in-with-krdpass.html>
