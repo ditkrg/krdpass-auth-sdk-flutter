@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart' show PlatformException;
 
 import 'logger.dart';
 import 'models/auth_result.dart';
@@ -250,6 +251,9 @@ class KrdpassAuth {
     } on KrdpassException {
       await _platform!.cancelPendingSignIn();
       rethrow;
+    } on PlatformException catch (e) {
+      await _platform!.cancelPendingSignIn();
+      throw _mapPlatformError(e, 'Sign in failed');
     } catch (e) {
       await _platform!.cancelPendingSignIn();
       throw KrdpassAuthenticationException('Sign in failed', cause: e);
@@ -547,7 +551,28 @@ class KrdpassNetworkException extends KrdpassException {
 
 /// Authentication failed (bad code, token exchange rejected, id_token invalid, etc.).
 class KrdpassAuthenticationException extends KrdpassException {
-  const KrdpassAuthenticationException(super.message, {super.cause});
+  const KrdpassAuthenticationException(super.message, {this.code, super.cause});
+
+  /// The native error code, if any (e.g. `provider_not_installed`), so callers
+  /// can branch without parsing [message].
+  final String? code;
+}
+
+/// Maps a native [PlatformException] to the typed [KrdpassException] hierarchy,
+/// preserving the native error code instead of collapsing it into a generic failure.
+KrdpassException _mapPlatformError(PlatformException e, String fallbackMessage) {
+  switch (e.code) {
+    case 'cancelled':
+    case 'user_cancelled':
+    case 'access_denied':
+      return const KrdpassCancelledException();
+    case 'timeout':
+      return const KrdpassTimeoutException();
+    case 'busy':
+      return const KrdpassBusyException();
+    default:
+      return KrdpassAuthenticationException(fallbackMessage, code: e.code, cause: e);
+  }
 }
 
 /// Exception thrown when token verification fails.
