@@ -101,8 +101,19 @@ public class KrdpassAuthPlugin: NSObject, FlutterPlugin {
           result(true)
 
         case .failure(let error):
+          // Preserve the native error category so the Dart layer can surface a typed
+          // exception (cancelled/timeout/busy/...) instead of a generic failure.
+          let code: String
+          switch error {
+          case .userCancelled: code = "cancelled"
+          case .timeout: code = "timeout"
+          case .busy: code = "busy"
+          case .configurationError: code = "invalid_request"
+          case .networkError: code = "network_error"
+          default: code = "authentication_failed"
+          }
           let resultData: [String: Any] = [
-            "error": "authentication_failed",
+            "error": code,
             "error_description": error.errorDescription ?? "Authentication failed"
           ]
           self?.channel?.invokeMethod("onSignInResult", arguments: resultData)

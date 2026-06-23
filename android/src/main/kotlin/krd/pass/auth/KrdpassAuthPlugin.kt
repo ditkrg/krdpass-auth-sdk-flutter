@@ -12,6 +12,7 @@ import krd.pass.auth.AuthResult
 import krd.pass.auth.KrdpassAuth
 import krd.pass.auth.KrdpassConfig
 import krd.pass.auth.KrdpassEnvironment
+import krd.pass.auth.KrdpassError
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
@@ -116,8 +117,18 @@ class KrdpassAuthPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
                         result.success(true)
                     },
                     onFailure = { exception ->
+                        // Preserve the native error category so the Dart layer can surface a
+                        // typed exception (cancelled/timeout/busy/...) instead of a generic failure.
+                        val code = when (exception) {
+                            is KrdpassError.UserCancelled -> "cancelled"
+                            is KrdpassError.Timeout -> "timeout"
+                            is KrdpassError.Busy -> "busy"
+                            is KrdpassError.ConfigurationError -> "invalid_request"
+                            is KrdpassError.NetworkError -> "network_error"
+                            else -> "authentication_failed"
+                        }
                         channel?.invokeMethod("onSignInResult", mapOf(
-                            "error" to "authentication_failed",
+                            "error" to code,
                             "error_description" to exception.message.orEmpty()
                         ))
                         result.success(true)

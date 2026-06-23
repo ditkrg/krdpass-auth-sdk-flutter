@@ -23,6 +23,30 @@ dependencies:
 
 Then `flutter pub get`. Access to the private repo (SSH key or token) is required.
 
+### Android setup (required)
+
+The Android half of this plugin depends on the core SDK
+`krd.pass:krdpass-auth`, published privately to **GitHub Packages**. Your app's
+Gradle build must declare that Maven repository with a token that has the
+`read:packages` scope, or the Android build will fail to resolve the artifact.
+
+In your app's `android/settings.gradle.kts` (or `build.gradle`), under
+`dependencyResolutionManagement { repositories { ... } }`:
+
+```kotlin
+maven {
+    url = uri("https://maven.pkg.github.com/ditkrg/krdpass-auth-sdk-android")
+    credentials {
+        username = providers.gradleProperty("gpr.user").orNull ?: System.getenv("GITHUB_ACTOR")
+        password = providers.gradleProperty("gpr.token").orNull ?: System.getenv("GITHUB_TOKEN")
+    }
+}
+```
+
+Provide the credentials via `~/.gradle/gradle.properties` (`gpr.user` /
+`gpr.token`) or the `GITHUB_ACTOR` / `GITHUB_TOKEN` environment variables. iOS
+needs no extra setup (the pod is vendored through the plugin).
+
 ## Quickstart
 
 Initialize once at startup:

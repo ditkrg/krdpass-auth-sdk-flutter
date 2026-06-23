@@ -193,7 +193,7 @@ class AndroidKrdpassPlatform extends KrdpassPlatform {
     if (_pendingSignInCompleter != null &&
         !_pendingSignInCompleter!.isCompleted) {
       _pendingSignInCompleter!.completeError(
-        Exception('Sign in cancelled'),
+        PlatformException(code: 'cancelled', message: 'Sign in cancelled'),
       );
     }
     _pendingSignInCompleter = null;
@@ -225,8 +225,14 @@ class AndroidKrdpassPlatform extends KrdpassPlatform {
     } else if (call.method == 'onSignInResult') {
       final args = call.arguments as Map;
       if (args.containsKey('error')) {
+        // Complete with a PlatformException carrying the native error code so the
+        // client's `on PlatformException` arm runs _mapPlatformError and yields a
+        // typed exception (cancelled/timeout/busy/...).
         _pendingSignInCompleter?.completeError(
-          Exception('${args['error']}: ${args['error_description']}'),
+          PlatformException(
+            code: (args['error'] as String?) ?? 'authentication_failed',
+            message: args['error_description'] as String?,
+          ),
         );
       } else {
         _pendingSignInCompleter?.complete(Map<String, dynamic>.from(args));

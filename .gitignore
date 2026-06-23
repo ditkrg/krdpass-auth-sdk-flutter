@@ -43,3 +43,6 @@ app.*.map.json
 
 # FVM Version Cache
 .fvm/
+
+# Dart/Flutter library: do not track the resolved lockfile
+pubspec.lock

@@ -570,6 +570,8 @@ KrdpassException _mapPlatformError(PlatformException e, String fallbackMessage) 
       return const KrdpassTimeoutException();
     case 'busy':
       return const KrdpassBusyException();
+    case 'network_error':
+      return KrdpassNetworkException(e.message ?? fallbackMessage, cause: e);
     default:
       return KrdpassAuthenticationException(fallbackMessage, code: e.code, cause: e);
   }
