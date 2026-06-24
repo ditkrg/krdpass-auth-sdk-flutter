@@ -2,7 +2,7 @@ group 'krd.pass.krdpass_auth'
 version '1.0.0'
 
 buildscript {
-    ext.kotlin_version = '2.1.0'
+    ext.kotlin_version = '2.4.0'
     repositories {
         google()
         mavenCentral()
