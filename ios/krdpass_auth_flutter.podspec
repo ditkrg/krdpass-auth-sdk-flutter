@@ -9,7 +9,7 @@ Pod::Spec.new do |s|
   s.description      = <<-DESC
 A Flutter plugin for integrating Sign in with KRDPass OAuth authentication.
                        DESC
-  s.homepage         = 'https://github.com/ditkrg/krdpass-auth-sdk'
+  s.homepage         = 'https://github.com/ditkrg/krdpass-auth-sdk-flutter'
   s.license          = { :file => '../LICENSE' }
   s.author           = { 'KRDPass' => 'integration@pass.krd' }
   s.source           = { :path => '.' }

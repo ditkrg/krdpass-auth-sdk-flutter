@@ -25,8 +25,13 @@ Then `flutter pub get`. Access to the private repo (SSH key or token) is require
 
 ### Android setup (required)
 
+> **Note:** distribution is moving to public package registries (Maven Central /
+> pub.dev). Once the Android core is on Maven Central, no token or extra repository
+> will be needed — consumers will just use `mavenCentral()`. The GitHub Packages steps
+> below are interim and subject to change.
+
 The Android half of this plugin depends on the core SDK
-`krd.pass:krdpass-auth`, published privately to **GitHub Packages**. Your app's
+`krd.pass:krdpass-auth`, published to **GitHub Packages**. Your app's
 Gradle build must declare that Maven repository with a token that has the
 `read:packages` scope, or the Android build will fail to resolve the artifact.
 

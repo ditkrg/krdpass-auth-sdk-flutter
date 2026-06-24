@@ -432,15 +432,17 @@ class KrdpassAuth {
   }
 
   /// Verify a JWT using the environment's JWKS endpoint and validate standard claims.
-  /// Supports standard RSA/EC JWK keys provided by the issuer.
+  ///
+  /// The audience is derived automatically from the configured `clientId` (matching
+  /// the Android/React Native SDKs). This convenience verifier validates the RS256
+  /// signature, audience, and expiry; the security-critical [signIn] trust path
+  /// additionally pins the issuer and binds the nonce.
   Future<Map<String, dynamic>> verifyToken({
-    required String token,
-    String? issuer,
-    String? audience,
+    required String idToken,
     Duration clockSkew = const Duration(seconds: 60),
   }) async {
-    if (token.isEmpty) {
-      throw ArgumentError.value(token, 'token', 'cannot be empty');
+    if (idToken.isEmpty) {
+      throw ArgumentError.value(idToken, 'idToken', 'cannot be empty');
     }
 
     try {
@@ -452,9 +454,8 @@ class KrdpassAuth {
       }
 
       return await _platform!.verifyToken(
-        token: token,
-        issuer: issuer,
-        audience: audience,
+        token: idToken,
+        audience: config.clientId,
         clockSkew: clockSkew,
       );
     } catch (e) {

@@ -46,19 +46,19 @@ void main() {
   });
 
   group('verifyToken', () {
-    test('throws ArgumentError for empty token', () async {
+    test('throws ArgumentError for empty idToken', () async {
       expect(
-        () => client.verifyToken(token: ''),
+        () => client.verifyToken(idToken: ''),
         throwsA(isA<ArgumentError>()),
       );
     });
 
     test('calls native verifyToken and returns result', () async {
-      final claims = await client.verifyToken(token: 'valid-token');
+      final claims = await client.verifyToken(idToken: 'valid-token');
       expect(claims['sub'], equals('test-user'));
     });
 
-    test('passes parameters to native bridge', () async {
+    test('derives audience from clientId and does not pin issuer', () async {
       final calls = <Map<String, dynamic>>[];
 
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
@@ -71,22 +71,22 @@ void main() {
       });
 
       await client.verifyToken(
-        token: 'token123',
-        issuer: 'issuer123',
-        audience: 'aud123',
+        idToken: 'token123',
         clockSkew: const Duration(seconds: 30),
       );
 
       expect(calls.length, 1);
       expect(calls.first['token'], 'token123');
-      expect(calls.first['issuer'], 'issuer123');
-      expect(calls.first['audience'], 'aud123');
+      // audience is SDK-derived from the configured clientId (parity with Android/RN)
+      expect(calls.first['audience'], 'test-client');
+      // the convenience verifier does not pin the issuer
+      expect(calls.first.containsKey('issuer'), isFalse);
       expect(calls.first['clockSkew'], 30);
     });
 
     test('throws TokenValidationException on bridge error', () async {
       expect(
-        () => client.verifyToken(token: 'invalid-token'),
+        () => client.verifyToken(idToken: 'invalid-token'),
         throwsA(isA<TokenValidationException>()),
       );
     });

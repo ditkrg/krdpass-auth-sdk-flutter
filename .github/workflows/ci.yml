@@ -1,5 +1,6 @@
 name: CI
 
+# Build + test only. No publish step (packages are not published yet).
 on:
   push:
     branches: [ main ]
@@ -19,8 +20,11 @@ jobs:
         with:
           flutter-version: 'stable'
 
-      - name: Flutter doctor
-        run: flutter doctor -v
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Analyze
+        run: flutter analyze
 
       - name: Run tests
         run: flutter test
