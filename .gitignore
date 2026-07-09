@@ -46,3 +46,8 @@ app.*.map.json
 
 # Dart/Flutter library: do not track the resolved lockfile
 pubspec.lock
+
+# Temporary AI agent prompt files - never commit
+AGENT_PROMPT_*.md
+*_TEMP.md
+*_NOTES.md
