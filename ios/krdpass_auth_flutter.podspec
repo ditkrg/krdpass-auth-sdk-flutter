@@ -4,10 +4,10 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'krdpass_auth_flutter'
-  s.version           = '1.0.0'
+  s.version           = '1.0.1'
   s.summary          = 'Flutter SDK for Sign in with KRDPASS OAuth authentication'
   s.description      = <<-DESC
-A Flutter plugin for integrating Sign in with KRDPASS OAuth authentication.
+KRDPASS Auth SDK for Flutter. Handles app-to-app OAuth sign-in and deep link callbacks.
                        DESC
   s.homepage         = 'https://github.com/ditkrg/krdpass-auth-sdk-flutter'
   s.license          = { :file => '../LICENSE' }

@@ -1,6 +1,6 @@
 name: krdpass_auth_flutter
 description: Official KRDPASS Authentication SDK for Flutter
-version: 1.0.0
+version: 1.0.1
 homepage: https://github.com/ditkrg/krdpass-auth-sdk-flutter
 repository: https://github.com/ditkrg/krdpass-auth-sdk-flutter
 issue_tracker: https://github.com/ditkrg/krdpass-auth-sdk-flutter/issues
