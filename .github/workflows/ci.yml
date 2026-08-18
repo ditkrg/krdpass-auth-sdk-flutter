@@ -1,0 +1,85 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: ["**"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build and test
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          channel: stable
+      - run: flutter pub get
+      - run: dart format --output=none --set-exit-if-changed .
+      - run: flutter analyze
+      - run: flutter test
+
+  android:
+    name: Android
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          channel: stable
+
+      # The example app is what compiles the plugin's Android side at all: the plugin
+      # module has no Gradle build of its own to invoke.
+      # Step order is load-bearing: this build generates example/android/local.properties,
+      # which the gradlew step below needs.
+      - name: Build the example APK
+        working-directory: example
+        run: flutter build apk --debug
+
+      # WireMappingTest lives in the plugin module and runs nowhere else. The example's
+      # wrapper is used because the plugin module is only a project of a consuming app.
+      - name: Plugin unit tests
+        working-directory: example/android
+        run: ./gradlew :krdpass_auth_flutter:test
+
+  ios:
+    name: iOS
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      # SwiftPM derives package identity from the checkout directory name, and the
+      # example resolves the plugin by path, so the directory has to match the package
+      # name rather than the repository name.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          path: krdpass_auth_flutter
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          channel: stable
+
+      # Compiles the Swift plugin and resolves the core through Package.swift, which
+      # `pod lib lint --quick` does not do.
+      - name: Build the example app
+        working-directory: krdpass_auth_flutter/example
+        run: flutter build ios --no-codesign
+
+      # CocoaPods path: the podspec must lint clean for consumers who have not opted
+      # into Swift Package Manager.
+      - name: pod lib lint
+        working-directory: krdpass_auth_flutter/ios
+        run: pod lib lint krdpass_auth_flutter.podspec --allow-warnings --quick

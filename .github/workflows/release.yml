@@ -1,0 +1,66 @@
+name: Release
+
+# Distribution is git tags only, not pub.dev. Tagging vX.Y.Z creates a GitHub Release;
+# consumers install via a pubspec git dependency pinned to the tag.
+on:
+  push:
+    tags: ['v*']
+
+# Least privilege: the default token is read-only; only the release job elevates.
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write # create the GitHub Release
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # Consumers pin a pubspec git dependency to this tag but resolve the version from
+      # pubspec.yaml, so a tag that disagrees with pubspec.yaml ships a mislabelled release.
+      # The tag reaches Python only through the environment, never through the script text.
+      - name: Verify that the tag, the pubspec version and the changelog agree
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          python3 <<'PY'
+          import os
+          import re
+          import sys
+
+          tag = os.environ["TAG"]
+          with open("pubspec.yaml", encoding="utf-8") as handle:
+              pubspec = handle.read()
+          match = re.search(r"^version:\s*(\S+)", pubspec, re.MULTILINE)
+          if match is None:
+              sys.exit("Could not find the top-level version key in pubspec.yaml.")
+          version = match.group(1)
+          if tag != f"v{version}":
+              sys.exit(f"Tag {tag} does not match pubspec version {version}.")
+
+          # A release with no changelog entry ships unexplained.
+          with open("CHANGELOG.md", encoding="utf-8") as handle:
+              changelog = handle.read()
+          heading = f"## [{version}]"
+          if heading not in changelog:
+              sys.exit(f"CHANGELOG.md has no '{heading}' entry.")
+          print(f"Tag {tag}, pubspec {version} and the changelog all agree.")
+          PY
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          channel: stable
+      - run: flutter pub get
+      - run: flutter test
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 || gh release create "$GITHUB_REF_NAME" --generate-notes

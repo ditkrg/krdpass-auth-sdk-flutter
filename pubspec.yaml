@@ -1,0 +1,36 @@
+name: krdpass_auth_flutter
+description: >-
+  Official KRDPASS authentication SDK for Flutter. App-to-app OAuth 2.0 and
+  OpenID Connect sign-in via the KRDPASS identity app on Android and iOS.
+version: 1.6.0
+topics:
+  - authentication
+  - oauth
+  - oidc
+  - sso
+homepage: https://github.com/ditkrg/krdpass-auth-sdk-flutter
+repository: https://github.com/ditkrg/krdpass-auth-sdk-flutter
+issue_tracker: https://github.com/ditkrg/krdpass-auth-sdk-flutter/issues
+
+environment:
+  sdk: ^3.12.0
+  flutter: ">=3.44.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  crypto: ^3.0.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: krd.pass.auth
+        pluginClass: KrdpassAuthPlugin
+      ios:
+        pluginClass: KrdpassAuthPlugin
