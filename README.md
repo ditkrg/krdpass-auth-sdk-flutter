@@ -4,7 +4,7 @@ Sign in with KRDPASS for Flutter apps. The plugin wraps the native Android and i
 which hand off to the installed KRDPASS identity app. It is not a browser or WebView flow.
 
 Full integration guide, onboarding, error codes and security requirements:
-**[KRDPASS documentation](https://docs.digital.gov.krd/software-development/04-interoperability/11-krdpass-sign-in-with-krdpass.html)**
+**[KRDPASS documentation](https://docs.digital.gov.krd/software-development/04-interoperability/11-krdpass-overview.html)**
 
 ## What this package is, and is not
 
@@ -26,7 +26,7 @@ Auditing this repository is not the same as auditing the KRDPASS sign-in flow.
 - Dart 3.12, Flutter 3.44 or newer
 - Android `minSdk` 24, iOS 15.0
 - A `clientId`, approved scopes, and an HTTPS `redirectUri`. See
-  [Getting started](https://docs.digital.gov.krd/software-development/04-interoperability/12-krdpass-getting-started.html).
+  [Getting started](https://docs.digital.gov.krd/software-development/04-interoperability/13-krdpass-onboarding.html).
 
 ## Install
 
@@ -210,7 +210,7 @@ KrdpassLogger.logFunction = (level, message, [error, stackTrace]) =>
 ## Error handling
 
 Every error code, what emits it, and how to handle it:
-[Testing and go-live](https://docs.digital.gov.krd/software-development/04-interoperability/14-krdpass-testing-and-go-live.html).
+[Testing and go-live](https://docs.digital.gov.krd/software-development/04-interoperability/15-krdpass-testing.html).
 
 Codes arrive as typed exceptions from `signIn` and as `AuthResult` fields from
 `authenticate`. `invalid_redirect` is Android-only: on iOS the same mismatch ends the flow as
@@ -220,7 +220,7 @@ Codes arrive as typed exceptions from `signIn` and as `AuthResult` fields from
 
 `getUserInfo`, `refreshTokens`, `revokeToken`, `verifyToken` and `decodeTokenUnverified` are
 methods on `KrdpassAuth.instance`. Scopes, claims and token handling rules:
-[Reference](https://docs.digital.gov.krd/software-development/04-interoperability/15-krdpass-reference.html).
+[Reference](https://docs.digital.gov.krd/software-development/04-interoperability/16-krdpass-reference.html).
 
 The SDK never persists tokens. Storage requirements:
 [Token storage](https://github.com/ditkrg/krdpass-auth-samples/blob/main/docs/TOKEN-STORAGE.md).
